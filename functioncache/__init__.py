@@ -180,10 +180,12 @@ class MemcacheBackend() :
     def setup(self, function) :
         pass
     
-    def __init__(self) :
-        import memcache
-        
-        self.mc = memcache.Client(['127.0.0.1:11211'], debug=0)
+    def __init__(self, mc) :
+        if mc :
+            self.mc = mc
+        else :
+            import memcache
+            self.mc = memcache.Client(['127.0.0.1:11211'], debug=0)
     
     def __contains__(self, key) :
         return self[key] != None

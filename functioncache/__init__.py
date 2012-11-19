@@ -154,7 +154,7 @@ class FileBackend(object) :
     """
     def setup(self, function) :
         self.dir_name = _get_cache_name(function) + 'd'
-        self.mkdir_p(self.dir_name)
+        self._mkdir_p(self.dir_name)
 
     def __contains__(self, key) :
         return _os.path.isfile(self._get_filename(key))

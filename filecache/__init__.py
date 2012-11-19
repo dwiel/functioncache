@@ -120,7 +120,62 @@ def _args_key(function, args, kwargs):
     key = function.__name__ + arguments_pickle
     return key
 
-def filecache(seconds_of_validity=None, fail_silently=False):
+class FilecacheShelveBackend(object) :
+    def __init__(self, function) :
+        self.shelve = _shelve.open(cache_name)
+    
+    def __in__(self, key) :
+        return key in self.shelve
+    
+    def __getattr__(self, key) :
+        return self.shelve[key]
+    
+    def __setattr__(self, key, value) :
+        # NOTE: no need to _db.sync() because there was no mutation
+        # NOTE: it's importatnt to do _db.sync() because otherwise the cache doesn't survive Ctrl-Break!
+        self.shelve[key] = _retval(_time.time(), retval)
+        self.shelve.sync()
+
+def mkdir_p(path) :
+    try:
+        os.makedirs(path)
+    except OSError as exc: # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else: raise
+
+import hashlib
+class FilecacheFileBackend(object) :
+    def __init__(self, function) :
+        module_name = _inspect.getfile(function)
+        cache_name = module_name
+        
+        # fix for '<string>' or '<stdin>' in exec or interpreter usage.
+        cache_name = cache_name.replace('<', '_lt_')
+        cache_name = cache_name.replace('>', '_gt_')
+        
+        cache_name += '.cache'
+        
+        self.dir_name = cache_name
+        mkdir_p(self.dir_name)
+
+    def __in__(self, key) :
+        return os.path.isfile(self.get_filename(key))
+    
+    def __getattr(self, key) :
+        return pickle.load(open(self.get_filename(key)))
+    
+    def __setattr(self, key, value) :
+        pickle.dump(
+            _retval(_time.time(), retval),
+            open(self.get_filename(key), 'w'),
+        )
+    
+    def get_filename(self, key) :
+        # hash the key and use as a filename
+        return self.dir_name + hashlib.sha1(key).hexdigest()
+
+def filecache(seconds_of_validity=None, fail_silently=False, DB=FilecacheShelveBackend):
     '''
     filecache is called and the decorator should be returned.
     '''
@@ -144,11 +199,8 @@ def filecache(seconds_of_validity=None, fail_silently=False):
             retval = function(*args, **kwargs)
 
             # store in cache
-            # NOTE: no need to _db.sync() because there was no mutation
-            # NOTE: it's importatnt to do _db.sync() because otherwise the cache doesn't survive Ctrl-Break!
             try:
                 function._db[key] = _retval(_time.time(), retval)
-                function._db.sync()
             except Exception:
                 # in any case of failure, don't let filecache break the program
                 error_str = _traceback.format_exc()
@@ -164,11 +216,11 @@ def filecache(seconds_of_validity=None, fail_silently=False):
             if cache_name in OPEN_DBS:
                 function._db = OPEN_DBS[cache_name]
             else:
-                function._db = _shelve.open(cache_name)
+                function._db = DB(function)
                 OPEN_DBS[cache_name] = function._db
             
             function_with_cache._db = function._db
-        
+            
         return function_with_cache
 
     if type(seconds_of_validity) == types.FunctionType:
@@ -177,6 +229,3 @@ def filecache(seconds_of_validity=None, fail_silently=False):
         return filecache_decorator(func)
     
     return filecache_decorator
-
-
-

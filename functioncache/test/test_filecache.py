@@ -6,7 +6,7 @@ import time
 import random
 import os
 
-import filecache
+import functioncache
 
 
 def erase_all_cache_files():
@@ -23,10 +23,10 @@ def erase_all_cache_files():
             os.remove(fpath)
 
 
-# NOTE: this comes so early so that the NotInnerClass's @filecache isn't erased from the disk
+# NOTE: this comes so early so that the NotInnerClass's @functioncache isn't erased from the disk
 erase_all_cache_files()
 
-class TestFilecache(unittest.TestCase):
+class TestFunctioncache(unittest.TestCase):
 
     #@classmethod               
     #def setUpClass(self):
@@ -38,7 +38,7 @@ class TestFilecache(unittest.TestCase):
     
     def test_returns(self):
         # make sure the thing works
-        @filecache.filecache(30)
+        @functioncache.functioncache(30)
         def donothing(x):
             return x
 
@@ -48,7 +48,7 @@ class TestFilecache(unittest.TestCase):
         
     def test_speeds(self):
         DELAY = 0.5
-        @filecache.filecache(60)
+        @functioncache.functioncache(60)
         def waiter(x):
             time.sleep(DELAY)
             return x
@@ -67,7 +67,7 @@ class TestFilecache(unittest.TestCase):
         wait = 0.1
         items = [1337, 69]
         
-        @filecache.filecache(wait)
+        @functioncache.functioncache(wait)
         def popper():
             return items.pop()
 
@@ -89,7 +89,7 @@ class TestFilecache(unittest.TestCase):
     
     def test_interpreter_usage(self):
         '''
-        This test is good for exec or interpreter usage of filecache.
+        This test is good for exec or interpreter usage of functioncache.
         
         inspect.getfile(function) returned a bad filename for these cases.
         
@@ -97,34 +97,34 @@ class TestFilecache(unittest.TestCase):
         IOError: [Errno 22] Invalid argument: '<string>.cache.dat'
         '''
         d = {}
-        exec('''from filecache import filecache\n@filecache(60)\ndef function(x): return x''',d ,d)
+        exec('''from functioncache import functioncache\n@functioncache(60)\ndef function(x): return x''',d ,d)
         first = d['function'](13)
         second = d['function'](13)
         self.assertEqual(first, second)
     
     def test_error_handling(self):
         
-        temp = filecache._log_error
+        temp = functioncache._log_error
         try:
             passed_test = [False]
             def mock_logger(*args, **kwargs):
                 passed_test[0] = True
             
-            filecache._log_error = mock_logger
+            functioncache._log_error = mock_logger
             
             def popper():
                 return 'arbitrary obj here'
             
-            # put anything in _db that you know will break filecache
+            # put anything in _db that you know will break functioncache
             popper._db = 123
             
-            popper = filecache.filecache(0.1, fail_silently=True)(popper)
+            popper = functioncache.functioncache(0.1, fail_silently=True)(popper)
             
             first = popper()
             
             self.assertTrue(passed_test[0])
         finally:
-            filecache._log_error = temp
+            functioncache._log_error = temp
 
     # TODO: maybe make class methods work somehow, problem is methods rely on instance
     #       members so I'd have to serialize the class maybe. A bit complex.
@@ -134,7 +134,7 @@ class TestFilecache(unittest.TestCase):
             def __init__(self):
                 self.number = 1
             
-            @filecache.filecache(5.0)
+            @functioncache.functioncache(5.0)
             def donothing(self, x):
                 self.number += x
                 return self.number
@@ -149,7 +149,7 @@ class NotInnerClass:
     def __init__(self):
         self.number = 1
     
-    @filecache.filecache(5.0)
+    @functioncache.functioncache(5.0)
     def donothing(self, x):
         self.number += x
         return self.number

@@ -13,18 +13,18 @@ try:
 except Exception:
     pass
 
-import filecache
-DOCUMENTATION = filecache.__doc__
+import functioncache
+DOCUMENTATION = functioncache.__doc__
 
 VERSION = '0.75'
 
 SETUP_DICT = dict(
-    name='filecache',
-    packages=['filecache'],
+    name='functioncache',
+    packages=['functioncache'],
     version=VERSION,
     author='ubershmekel',
     author_email='ubershmekel@gmail.com',
-    url='http://code.google.com/p/filecache/',
+    url='http://code.google.com/p/functioncache/',
     description='Persistent caching decorator',
     long_description=DOCUMENTATION,
     classifiers=[

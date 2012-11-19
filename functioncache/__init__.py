@@ -122,6 +122,11 @@ def _args_key(function, args, kwargs):
     return key
 
 class ShelveBackend(object) :
+    """
+    store cache data in a file based on the filename of the file which
+    contains the function being cached.  One cache file can store multiple
+    functions' data.
+    """
     def setup(self, function) :
         self.shelve = _shelve.open(_get_cache_name(function))
     
@@ -173,10 +178,12 @@ class FileBackend(object) :
             else: raise
 
 class DictBackend(dict) :
+    """ cached values won't persist outside of this thread """
     def setup(self, function) :
         pass
 
 class MemcacheBackend() :
+    """ simple wrapper around memcache """
     def setup(self, function) :
         pass
     

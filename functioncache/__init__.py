@@ -137,14 +137,6 @@ class ShelveBackend(object) :
         self.shelve[key] = value
         self.shelve.sync()
 
-def mkdir_p(path) :
-    try:
-        _os.makedirs(path)
-    except OSError as exc: # Python >2.5
-        if exc.errno == _errno.EEXIST and _os.path.isdir(path):
-            pass
-        else: raise
-
 import hashlib
 class FileBackend(object) :
     """
@@ -171,6 +163,14 @@ class FileBackend(object) :
     def _get_filename(self, key) :
         # hash the key and use as a filename
         return self.dir_name + '/' + hashlib.sha512(key).hexdigest()
+
+    def _mkdir_p(self, path) :
+        try:
+            _os.makedirs(path)
+        except OSError as exc: # Python >2.5
+            if exc.errno == _errno.EEXIST and _os.path.isdir(path):
+                pass
+            else: raise
 
 class DictBackend(dict) :
     def setup(self, function) :

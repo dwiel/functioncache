@@ -61,6 +61,7 @@ import shelve as _shelve
 import sys as _sys
 import time as _time
 import traceback as _traceback
+import errno as _errno
 import types
 
 _retval = _collections.namedtuple('_retval', 'timesig data')
@@ -120,32 +121,36 @@ def _args_key(function, args, kwargs):
     key = function.__name__ + arguments_pickle
     return key
 
-class FunctioncacheShelveBackend(object) :
+class ShelveBackend(object) :
     def __init__(self, function) :
         self.shelve = _shelve.open(cache_name)
     
-    def __in__(self, key) :
+    def __contains__(self, key) :
         return key in self.shelve
     
-    def __getattr__(self, key) :
+    def __getitem__(self, key) :
         return self.shelve[key]
     
-    def __setattr__(self, key, value) :
+    def __setitem__(self, key, value) :
         # NOTE: no need to _db.sync() because there was no mutation
         # NOTE: it's importatnt to do _db.sync() because otherwise the cache doesn't survive Ctrl-Break!
-        self.shelve[key] = _retval(_time.time(), retval)
+        self.shelve[key] = value
         self.shelve.sync()
 
 def mkdir_p(path) :
     try:
-        os.makedirs(path)
+        _os.makedirs(path)
     except OSError as exc: # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
+        if exc.errno == _errno.EEXIST and _os.path.isdir(path):
             pass
         else: raise
 
 import hashlib
-class FunctioncacheFileBackend(object) :
+class FileBackend(object) :
+    """
+    provide a backend to functioncache which stores each function argument
+    combination in a different file
+    """
     def __init__(self, function) :
         module_name = _inspect.getfile(function)
         cache_name = module_name
@@ -159,23 +164,20 @@ class FunctioncacheFileBackend(object) :
         self.dir_name = cache_name
         mkdir_p(self.dir_name)
 
-    def __in__(self, key) :
-        return os.path.isfile(self.get_filename(key))
+    def __contains__(self, key) :
+        return _os.path.isfile(self.get_filename(key))
     
-    def __getattr(self, key) :
-        return pickle.load(open(self.get_filename(key)))
+    def __getitem__(self, key) :
+        return _pickle.load(open(self.get_filename(key)))
     
-    def __setattr(self, key, value) :
-        pickle.dump(
-            _retval(_time.time(), retval),
-            open(self.get_filename(key), 'w'),
-        )
+    def __setitem__(self, key, value) :
+        _pickle.dump(value, open(self.get_filename(key), 'w'))
     
     def get_filename(self, key) :
         # hash the key and use as a filename
-        return self.dir_name + hashlib.sha1(key).hexdigest()
+        return self.dir_name + '/' + hashlib.sha512(key).hexdigest()
 
-def functioncache(seconds_of_validity=None, fail_silently=False, DB=FunctioncacheShelveBackend):
+def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveBackend):
     '''
     functioncache is called and the decorator should be returned.
     '''
@@ -216,7 +218,7 @@ def functioncache(seconds_of_validity=None, fail_silently=False, DB=Functioncach
             if cache_name in OPEN_DBS:
                 function._db = OPEN_DBS[cache_name]
             else:
-                function._db = DB(function)
+                function._db = backend(function)
                 OPEN_DBS[cache_name] = function._db
             
             function_with_cache._db = function._db

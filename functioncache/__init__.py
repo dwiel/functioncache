@@ -200,6 +200,8 @@ class MemcacheBackend() :
             raise Exception("memcache set failed")
     
     def _hash_key(self, key) :
+        # the key needs hashed to remove the invalid characters from the
+        # pickled data and avoid problems with key length
         return hashlib.sha512(key).hexdigest()
 
 def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveBackend()):

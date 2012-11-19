@@ -149,7 +149,11 @@ import hashlib
 class FileBackend(object) :
     """
     provide a backend to functioncache which stores each function argument
-    combination in a different file
+    combination in a different file.  This works around the problem caused
+    by multiple python processes/threads trying to use the same file for
+    caching.  This will still fail if the same function with the same arguments
+    try to write simultaneously.  The ShelveBackend will fail often
+    if any function in the same python file tries to write simultaneously.
     """
     def setup(self, function) :
         self.dir_name = _get_cache_name(function) + 'd'

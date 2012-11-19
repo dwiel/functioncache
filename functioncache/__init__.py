@@ -122,8 +122,8 @@ def _args_key(function, args, kwargs):
     return key
 
 class ShelveBackend(object) :
-    def __init__(self, function) :
-        self.shelve = _shelve.open(cache_name)
+    def setup(self, function) :
+        self.shelve = _shelve.open(_get_cache_name(function))
     
     def __contains__(self, key) :
         return key in self.shelve
@@ -151,33 +151,52 @@ class FileBackend(object) :
     provide a backend to functioncache which stores each function argument
     combination in a different file
     """
-    def __init__(self, function) :
-        module_name = _inspect.getfile(function)
-        cache_name = module_name
-        
-        # fix for '<string>' or '<stdin>' in exec or interpreter usage.
-        cache_name = cache_name.replace('<', '_lt_')
-        cache_name = cache_name.replace('>', '_gt_')
-        
-        cache_name += '.cache'
-        
-        self.dir_name = cache_name
+    def setup(self, function) :
+        self.dir_name = _get_cache_name(function) + 'd'
         mkdir_p(self.dir_name)
 
     def __contains__(self, key) :
-        return _os.path.isfile(self.get_filename(key))
+        return _os.path.isfile(self._get_filename(key))
     
     def __getitem__(self, key) :
-        return _pickle.load(open(self.get_filename(key)))
+        return _pickle.load(open(self._get_filename(key)))
     
     def __setitem__(self, key, value) :
-        _pickle.dump(value, open(self.get_filename(key), 'w'))
+        _pickle.dump(value, open(self._get_filename(key), 'w'))
     
-    def get_filename(self, key) :
+    def _get_filename(self, key) :
         # hash the key and use as a filename
         return self.dir_name + '/' + hashlib.sha512(key).hexdigest()
 
-def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveBackend):
+class DictBackend(dict) :
+    def setup(self, function) :
+        pass
+
+class MemcacheBackend() :
+    def setup(self, function) :
+        pass
+    
+    def __init__(self) :
+        import memcache
+        
+        self.mc = memcache.Client(['127.0.0.1:11211'], debug=0)
+    
+    def __contains__(self, key) :
+        return self[key] != None
+    
+    def __getitem__(self, key) :
+        print self._hash_key(key), self.mc.get(self._hash_key(key))
+        return self.mc.get(self._hash_key(key))
+    
+    def __setitem__(self, key, value) :
+        print 'set', self._hash_key(key), value
+        if not self.mc.set(self._hash_key(key), value) :
+            raise Exception("memcache set failed")
+    
+    def _hash_key(self, key) :
+        return hashlib.sha512(key).hexdigest()
+
+def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveBackend()):
     '''
     functioncache is called and the decorator should be returned.
     '''
@@ -218,7 +237,8 @@ def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveB
             if cache_name in OPEN_DBS:
                 function._db = OPEN_DBS[cache_name]
             else:
-                function._db = backend(function)
+                backend.setup(function)
+                function._db = backend
                 OPEN_DBS[cache_name] = function._db
             
             function_with_cache._db = function._db

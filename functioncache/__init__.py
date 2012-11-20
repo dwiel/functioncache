@@ -62,7 +62,7 @@ import sys as _sys
 import time as _time
 import traceback as _traceback
 import errno as _errno
-import types
+import types as _types
 
 _retval = _collections.namedtuple('_retval', 'timesig data')
 _SRC_DIR = _os.path.dirname(_os.path.abspath(__file__))
@@ -215,6 +215,10 @@ def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveB
     '''
     functioncache is called and the decorator should be returned.
     '''
+    if isinstance(backend, _types.ClassType) or isinstance(backend, type) :
+        raise TypeError(
+            'backend should be an instance of a class, not a class itself'
+        )
     def functioncache_decorator(function):
         @_functools.wraps(function)
         def function_with_cache(*args, **kwargs):
@@ -260,7 +264,7 @@ def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveB
             
         return function_with_cache
 
-    if type(seconds_of_validity) == types.FunctionType:
+    if type(seconds_of_validity) == _types.FunctionType:
         # support for when people use '@functioncache.functioncache' instead of '@functioncache.functioncache()'
         func = seconds_of_validity
         return functioncache_decorator(func)

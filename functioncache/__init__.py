@@ -182,7 +182,7 @@ class DictBackend(dict) :
     def setup(self, function) :
         pass
 
-class MemcacheBackend() :
+class MemcacheBackend(object) :
     """ simple wrapper around memcache """
     def setup(self, function) :
         pass

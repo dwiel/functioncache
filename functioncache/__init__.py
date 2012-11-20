@@ -215,10 +215,10 @@ def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveB
     '''
     functioncache is called and the decorator should be returned.
     '''
+    # if a class is passed in, create an instance of that class as the backend
     if isinstance(backend, _types.ClassType) or isinstance(backend, type) :
-        raise TypeError(
-            'backend should be an instance of a class, not a class itself'
-        )
+        backend = backend()
+    
     def functioncache_decorator(function):
         @_functools.wraps(function)
         def function_with_cache(*args, **kwargs):

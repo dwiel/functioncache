@@ -211,7 +211,7 @@ class MemcacheBackend(object) :
         # pickled data and avoid problems with key length
         return hashlib.sha512(key).hexdigest()
 
-def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveBackend()):
+def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend()):
     '''
     functioncache is called and the decorator should be returned.
     '''

@@ -224,7 +224,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
     def functioncache_decorator(function):
         @_functools.wraps(function)
         def function_with_cache(*args, **kwargs):
-            if disable_functioncache :
+            if not disable_functioncache :
                 try:
                     key = _args_key(function, args, kwargs)
 

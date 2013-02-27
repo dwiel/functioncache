@@ -56,7 +56,7 @@ import datetime as _datetime
 import functools as _functools
 import inspect as _inspect
 import os as _os
-import pickle as _pickle
+import cPickle as _pickle
 import shelve as _shelve
 import sys as _sys
 import time as _time
@@ -211,6 +211,8 @@ class MemcacheBackend(object) :
         # pickled data and avoid problems with key length
         return hashlib.sha512(key).hexdigest()
 
+disable_functioncache = _os.path.exists("~/.disable_functioncache")
+
 def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend()):
     '''
     functioncache is called and the decorator should be returned.
@@ -222,19 +224,20 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
     def functioncache_decorator(function):
         @_functools.wraps(function)
         def function_with_cache(*args, **kwargs):
-            try:
-                key = _args_key(function, args, kwargs)
-                
-                if key in function._db:
-                    rv = function._db[key]
-                    if seconds_of_validity is None or _time.time() - rv.timesig < seconds_of_validity:
-                        return rv.data
-            except Exception:
-                # in any case of failure, don't let functioncache break the program
-                error_str = _traceback.format_exc()
-                _log_error(error_str)
-                if not fail_silently:
-                    raise
+            if disable_functioncache :
+                try:
+                    key = _args_key(function, args, kwargs)
+
+                    if key in function._db:
+                        rv = function._db[key]
+                        if seconds_of_validity is None or _time.time() - rv.timesig < seconds_of_validity:
+                            return rv.data
+                except Exception:
+                    # in any case of failure, don't let functioncache break the program
+                    error_str = _traceback.format_exc()
+                    _log_error(error_str)
+                    if not fail_silently:
+                        raise
             
             retval = function(*args, **kwargs)
 

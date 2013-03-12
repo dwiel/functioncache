@@ -194,7 +194,7 @@ class MemcacheBackend(object) :
     def setup(self, function) :
         pass
     
-    def __init__(self, mc) :
+    def __init__(self, mc=None) :
         if mc :
             self.mc = mc
         else :

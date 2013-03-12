@@ -56,7 +56,7 @@ import datetime as _datetime
 import functools as _functools
 import inspect as _inspect
 import os as _os
-import pickle as _pickle
+import cPickle as _pickle
 import shelve as _shelve
 import sys as _sys
 import time as _time
@@ -231,7 +231,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
         def function_with_cache(*args, **kwargs):
             try:
                 key = _args_key(function, args, kwargs)
-                
+
                 if key in function._db:
                     rv = function._db[key]
                     if seconds_of_validity is None or _time.time() - rv.timesig < seconds_of_validity:
@@ -277,3 +277,10 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
         return functioncache_decorator(func)
     
     return functioncache_decorator
+
+if _os.path.exists(_os.path.expanduser("~/.disable_functioncache")) :
+    print 'disabled functioncache'
+    def functioncache(*_, **__) :
+        def nop_decorator(function) :
+            return function
+        return nop_decorator

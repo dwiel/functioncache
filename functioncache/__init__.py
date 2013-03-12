@@ -163,7 +163,14 @@ class FileBackend(object) :
         return _pickle.load(open(self._get_filename(key)))
     
     def __setitem__(self, key, value) :
-        _pickle.dump(value, open(self._get_filename(key), 'w'))
+        try :
+            _pickle.dump(value, open(self._get_filename(key), 'w'))
+        except Exception, e :
+            # delete the file in the event of an exception during saving
+            # to protect from corrupted files causing problems later
+            import os
+            os.remove(self._get_filename(key))
+            raise e
     
     def _get_filename(self, key) :
         # hash the key and use as a filename

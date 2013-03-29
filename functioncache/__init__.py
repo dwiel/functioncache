@@ -270,3 +270,7 @@ def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveB
         return functioncache_decorator(func)
     
     return functioncache_decorator
+
+def dictcache(seconds_of_validity=None, fail_silently=False) :
+    return functioncache(seconds_of_validity, fail_silently, DictBackend())
+        

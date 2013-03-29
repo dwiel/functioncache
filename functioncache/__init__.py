@@ -56,7 +56,7 @@ import datetime as _datetime
 import functools as _functools
 import inspect as _inspect
 import os as _os
-import pickle as _pickle
+import cPickle as _pickle
 import shelve as _shelve
 import sys as _sys
 import time as _time
@@ -163,7 +163,14 @@ class FileBackend(object) :
         return _pickle.load(open(self._get_filename(key)))
     
     def __setitem__(self, key, value) :
-        _pickle.dump(value, open(self._get_filename(key), 'w'))
+        try :
+            _pickle.dump(value, open(self._get_filename(key), 'w'))
+        except Exception, e :
+            # delete the file in the event of an exception during saving
+            # to protect from corrupted files causing problems later
+            import os
+            os.remove(self._get_filename(key))
+            raise e
     
     def _get_filename(self, key) :
         # hash the key and use as a filename
@@ -187,7 +194,7 @@ class MemcacheBackend(object) :
     def setup(self, function) :
         pass
     
-    def __init__(self, mc) :
+    def __init__(self, mc=None) :
         if mc :
             self.mc = mc
         else :
@@ -211,7 +218,7 @@ class MemcacheBackend(object) :
         # pickled data and avoid problems with key length
         return hashlib.sha512(key).hexdigest()
 
-def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveBackend()):
+def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend()):
     '''
     functioncache is called and the decorator should be returned.
     '''
@@ -224,7 +231,7 @@ def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveB
         def function_with_cache(*args, **kwargs):
             try:
                 key = _args_key(function, args, kwargs)
-                
+
                 if key in function._db:
                     rv = function._db[key]
                     if seconds_of_validity is None or _time.time() - rv.timesig < seconds_of_validity:
@@ -274,3 +281,9 @@ def functioncache(seconds_of_validity=None, fail_silently=False, backend=ShelveB
 def dictcache(seconds_of_validity=None, fail_silently=False) :
     return functioncache(seconds_of_validity, fail_silently, DictBackend())
         
+if _os.path.exists(_os.path.expanduser("~/.disable_functioncache")) :
+    print 'disabled functioncache'
+    def functioncache(*_, **__) :
+        def nop_decorator(function) :
+            return function
+        return nop_decorator

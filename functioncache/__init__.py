@@ -236,7 +236,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
                     rv = function._db[key]
                     if seconds_of_validity is None or _time.time() - rv.timesig < seconds_of_validity:
                         return rv.data
-            except Exception:
+            except :
                 # in any case of failure, don't let functioncache break the program
                 error_str = _traceback.format_exc()
                 _log_error(error_str)
@@ -248,7 +248,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
             # store in cache
             try:
                 function._db[key] = _retval(_time.time(), retval)
-            except Exception:
+            except :
                 # in any case of failure, don't let functioncache break the program
                 error_str = _traceback.format_exc()
                 _log_error(error_str)

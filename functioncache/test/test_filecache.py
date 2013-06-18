@@ -7,7 +7,12 @@ import random
 import os
 
 import functioncache
+import tempfile
 
+_CACHE_ROOT="/tmp/.functioncache"
+
+print "Using temporary _CACHE_ROOT = ", _CACHE_ROOT
+functioncache._CACHE_ROOT = _CACHE_ROOT
 
 def erase_all_cache_files():
     shelve_suffixes = ('.cache', '.cache.bak', '.cache.dir', '.cache.dat')
@@ -22,6 +27,9 @@ def erase_all_cache_files():
         if fname.endswith(shelve_suffixes) and os.path.exists(fpath):
             os.remove(fpath)
 
+    import shutil
+    shutil.rmtree(_CACHE_ROOT, ignore_errors=True)
+
 
 # NOTE: this comes so early so that the NotInnerClass's @functioncache isn't erased from the disk
 erase_all_cache_files()
@@ -30,11 +38,11 @@ class TestFunctioncache(unittest.TestCase):
 
     #@classmethod               
     #def setUpClass(self):
-    #    self.erase_all_cache_files()
+    #    erase_all_cache_files()
     
     #@classmethod                
     #def tearDownClass(self):
-    #    self.erase_all_cache_files()
+    #    erase_all_cache_files()
     
     def test_returns(self):
         # make sure the thing works
@@ -149,7 +157,7 @@ class NotInnerClass:
     def __init__(self):
         self.number = 1
     
-    @functioncache.functioncache(5.0)
+    @functioncache.functioncache(5.0, backend = functioncache.FileBackend())
     def donothing(self, x):
         self.number += x
         return self.number

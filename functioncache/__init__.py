@@ -66,6 +66,7 @@ import types as _types
 
 _retval = _collections.namedtuple('_retval', 'timesig data')
 _SRC_DIR = _os.path.dirname(_os.path.abspath(__file__))
+_CACHE_ROOT=_os.path.expanduser("~/.functioncache")
 
 SECOND = 1
 MINUTE = 60 * SECOND
@@ -77,6 +78,14 @@ YEAR = 365 * DAY
 FOREVER = None
 
 OPEN_DBS = dict()
+
+def _mkdir_p(path) :
+    try:
+        _os.makedirs(path)
+    except OSError as exc: # Python >2.5
+        if exc.errno == _errno.EEXIST and _os.path.isdir(path):
+            pass
+        else: raise
 
 def _get_cache_name(function):
     """
@@ -90,6 +99,10 @@ def _get_cache_name(function):
     cache_name = cache_name.replace('>', '_gt_')
     
     cache_name += '.cache'
+    cache_name = _CACHE_ROOT + _os.path.abspath(cache_name)
+    cache_dir=_os.path.dirname(cache_name)
+    if not _os.path.exists(cache_dir):
+        _mkdir_p(cache_dir)
     return cache_name
 
 
@@ -154,7 +167,7 @@ class FileBackend(object) :
     """
     def setup(self, function) :
         self.dir_name = _get_cache_name(function) + 'd'
-        self._mkdir_p(self.dir_name)
+        _mkdir_p(self.dir_name)
 
     def __contains__(self, key) :
         return _os.path.isfile(self._get_filename(key))
@@ -175,14 +188,6 @@ class FileBackend(object) :
     def _get_filename(self, key) :
         # hash the key and use as a filename
         return self.dir_name + '/' + hashlib.sha512(key).hexdigest()
-
-    def _mkdir_p(self, path) :
-        try:
-            _os.makedirs(path)
-        except OSError as exc: # Python >2.5
-            if exc.errno == _errno.EEXIST and _os.path.isdir(path):
-                pass
-            else: raise
 
 class DictBackend(dict) :
     """ cached values won't persist outside of this thread """

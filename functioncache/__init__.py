@@ -181,8 +181,7 @@ class FileBackend(object) :
         except Exception, e :
             # delete the file in the event of an exception during saving
             # to protect from corrupted files causing problems later
-            import os
-            os.remove(self._get_filename(key))
+            _os.remove(self._get_filename(key))
             raise e
     
     def _get_filename(self, key) :

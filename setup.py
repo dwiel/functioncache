@@ -16,15 +16,15 @@ except Exception:
 import functioncache
 DOCUMENTATION = functioncache.__doc__
 
-VERSION = '0.75'
+VERSION = '0.80'
 
 SETUP_DICT = dict(
     name='functioncache',
     packages=['functioncache'],
     version=VERSION,
-    author='ubershmekel',
-    author_email='ubershmekel@gmail.com',
-    url='http://code.google.com/p/functioncache/',
+    author='zdwiel',
+    author_email='zdwiel@gmail.com',
+    url='https://github.com/dwiel/functioncache',
     description='Persistent caching decorator',
     long_description=DOCUMENTATION,
     classifiers=[

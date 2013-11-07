@@ -1,7 +1,7 @@
 
 import time
-from functioncache import functioncache
+from functioncache import dictcache
 
-@functioncache(30)
+@dictcache(30)
 def the_time():
     return time.time()

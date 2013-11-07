@@ -1,6 +1,6 @@
 from time import sleep
 
-import unittest2 as unittest
+import unittest
 
 from functioncache import functioncache, FileBackend, DictBackend, MemcacheBackend
 

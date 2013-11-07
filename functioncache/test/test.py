@@ -5,11 +5,11 @@ import unittest
 from functioncache import functioncache, FileBackend, DictBackend, MemcacheBackend
 
 @functioncache(backend=DictBackend())
-def test_dict(x, y) :
+def cached_dict(x, y) :
     return x + y
 
 @functioncache(backend=FileBackend())
-def test_file(x, y) :
+def cached_file(x, y) :
     return x - y
 
 class FunctioncacheTest(unittest.TestCase) :
@@ -29,13 +29,13 @@ class FunctioncacheTest(unittest.TestCase) :
         assert self.counter == 1
 
     def test_multicache_types(self) :
-        assert test_dict(1, 2) == 3
-        assert test_dict(1, 2) == 3
-        assert test_dict(1, 2) == 3
+        assert cached_dict(1, 2) == 3
+        assert cached_dict(1, 2) == 3
+        assert cached_dict(1, 2) == 3
 
-        assert test_file(1, 2) == -1
-        assert test_file(1, 2) == -1
-        assert test_file(1, 2) == -1
+        assert cached_file(1, 2) == -1
+        assert cached_file(1, 2) == -1
+        assert cached_file(1, 2) == -1
 
         # this is a bit delicate since it could be effected by other
         # tests which use more backends.  This count should be the

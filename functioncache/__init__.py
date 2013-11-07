@@ -284,7 +284,18 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
 
 def dictcache(seconds_of_validity=None, fail_silently=False) :
     return functioncache(seconds_of_validity, fail_silently, DictBackend())
-        
+
+def filecache(seconds_of_validity=None, fail_silently=False) :
+    return functioncache(seconds_of_validity, fail_silently, FileBackend())
+
+def shelvecache(seconds_of_validity=None, fail_silently=False) :
+    return functioncache(seconds_of_validity, fail_silently, ShelveBackend())
+
+def memcachecache(seconds_of_validity=None, fail_silently=False, mc=None) :
+    return functioncache(
+        seconds_of_validity, fail_silently, MemcacheBackend(mc)
+    )
+
 if _os.path.exists(_os.path.expanduser("~/.disable_functioncache")) :
     print 'disabled functioncache'
     def functioncache(*_, **__) :

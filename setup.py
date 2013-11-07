@@ -27,7 +27,6 @@ SETUP_DICT = dict(
     url='https://github.com/dwiel/functioncache',
     description='Persistent caching decorator',
     long_description=DOCUMENTATION,
-    requires=['unittest2'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

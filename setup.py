@@ -16,7 +16,7 @@ except Exception:
 import functioncache
 DOCUMENTATION = functioncache.__doc__
 
-VERSION = '0.81'
+VERSION = '0.82'
 
 SETUP_DICT = dict(
     name='functioncache',
@@ -27,6 +27,7 @@ SETUP_DICT = dict(
     url='https://github.com/dwiel/functioncache',
     description='Persistent caching decorator',
     long_description=DOCUMENTATION,
+    requires=['unittest2'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

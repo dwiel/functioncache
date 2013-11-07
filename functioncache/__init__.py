@@ -261,7 +261,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
 
         # make sure cache is loaded
         if not hasattr(function, '_db'):
-            cache_name = _get_cache_name(function)
+            cache_name = (_get_cache_name(function), type(backend))
             if cache_name in OPEN_DBS:
                 function._db = OPEN_DBS[cache_name]
             else:

@@ -209,11 +209,9 @@ class MemcacheBackend(object) :
         return self[key] != None
     
     def __getitem__(self, key) :
-        print self._hash_key(key), self.mc.get(self._hash_key(key))
         return self.mc.get(self._hash_key(key))
     
     def __setitem__(self, key, value) :
-        print 'set', self._hash_key(key), value
         if not self.mc.set(self._hash_key(key), value) :
             raise Exception("memcache set failed")
     

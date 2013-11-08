@@ -1,4 +1,4 @@
-'''
+"""
 functioncache
 
 functioncache is a decorator which saves the return value of functions even
@@ -48,7 +48,7 @@ A trick to invalidate a single value:
     # or just iterate of somefunc._db (it's a shelve, like a dict) to find the right key.
 
 
-'''
+"""
 
 
 import collections as _collections
@@ -176,6 +176,13 @@ class FileBackend(object) :
         return _pickle.load(open(self._get_filename(key)))
     
     def __setitem__(self, key, value) :
+        # first-write wins semantics.  if someone else already cached this
+        # value while we were off computing it, don't bother writing.  If we do
+        # write, and the other process is still writing, we may corrupt the
+        # file
+        if key in self :
+            return
+        
         try :
             _pickle.dump(value, open(self._get_filename(key), 'w'))
         except Exception, e :

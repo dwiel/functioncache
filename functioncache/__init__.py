@@ -156,7 +156,6 @@ class ShelveBackend(object) :
         self.shelve.sync()
 
 import hashlib
-import portalocker
 class FileBackend(object) :
     """
     provide a backend to functioncache which stores each function argument
@@ -181,6 +180,8 @@ class FileBackend(object) :
         # value while we were off computing it, don't bother writing.  If we do
         # write, and the other process is still writing, we may corrupt the
         # file
+        import portalocker
+        
         try :
             file = open(self._get_filename(key), 'w')
             portalocker.Lock(file, portalocker.LOCK_EX)

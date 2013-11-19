@@ -16,7 +16,7 @@ except Exception:
 import functioncache
 DOCUMENTATION = functioncache.__doc__
 
-VERSION = '0.85'
+VERSION = '0.86'
 
 SETUP_DICT = dict(
     name='functioncache',

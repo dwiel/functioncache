@@ -184,7 +184,7 @@ class FileBackend(object) :
         
         try :
             file = open(self._get_filename(key), 'w')
-            portalocker.Lock(file, portalocker.LOCK_EX)
+            portalocker.Lock(file)
             _pickle.dump(value, file)
         except portalocker.LockException, e :
             # someone else had the lock, thats ok, we don't have to

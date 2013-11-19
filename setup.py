@@ -1,4 +1,4 @@
-try:
+B1;3201;0ctry:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
@@ -16,7 +16,7 @@ except Exception:
 import functioncache
 DOCUMENTATION = functioncache.__doc__
 
-VERSION = '0.86'
+VERSION = '0.87'
 
 SETUP_DICT = dict(
     name='functioncache',

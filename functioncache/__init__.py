@@ -194,7 +194,7 @@ class FileBackend(object) :
             # delete the file in the event of an exception during saving
             # to protect from corrupted files causing problems later
             _os.remove(self._get_filename(key))
-            raise e
+            raise
     
     def _get_filename(self, key) :
         # hash the key and use as a filename
@@ -231,6 +231,28 @@ class MemcacheBackend(object) :
         # the key needs hashed to remove the invalid characters from the
         # pickled data and avoid problems with key length
         return hashlib.sha512(key).hexdigest()
+
+class S3Backend(object) :
+    """ wrapper around s3 - requires you to pass in an s3pool """
+
+    def setup(self, function) :
+        self.data_set = _get_cache_name(function)
+
+    def __init__(self, s3pool=None) :
+        if not s3pool :
+            s3pool = create_s3pool()
+        
+        self.s3pool = s3pool
+
+    def __contains__(self, key) :
+        return bool(self.s3pool.list(self.data_set, key))
+
+    def __getitem__(self, key) :
+        return self.s3pool.get_contents_as_string(self.data_set, key)
+
+    def __setitem__(self, key, value) :
+        return self.s3pool.set_contents_from_string(self.data_set, key, value)
+    
 
 def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend()):
     '''

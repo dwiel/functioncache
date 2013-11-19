@@ -1,4 +1,4 @@
-B1;3201;0ctry:
+try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup

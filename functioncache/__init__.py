@@ -197,7 +197,8 @@ class FileBackend(object) :
                 _os.remove(self._get_filename(key))
             except OSError :
                 pass
-            raise
+            
+            raise e
     
     def _get_filename(self, key) :
         # hash the key and use as a filename

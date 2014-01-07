@@ -193,7 +193,10 @@ class FileBackend(object) :
         except Exception, e :
             # delete the file in the event of an exception during saving
             # to protect from corrupted files causing problems later
-            _os.remove(self._get_filename(key))
+            try :
+                _os.remove(self._get_filename(key))
+            except OSError :
+                pass
             raise
     
     def _get_filename(self, key) :

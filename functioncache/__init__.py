@@ -269,7 +269,21 @@ class S3Backend(object) :
     def __setitem__(self, key, value) :
         return self.s3pool.set_contents_from_string(self.data_set, key, value)
     
-
+class SkipCache(Exception):
+    """
+    Sometimes something goes wrong (e.g. communication with a server times out), and your function wants to return a
+    "fail gracefully" fallback value, but you don't want it cached. The SkipCache exception lets you do just that.
+    instead of doing:
+      return some_fallback_value
+    you do:
+      raise SkipCache,"Server timeout",some_fallback_value
+    The caller of your function will get the value, but it won't get cached.
+    The error text ("Server timeout") will appear in functioncache's log.
+    """
+    def __init__(self, message,retval=None):
+        Exception.__init__(self, message)
+        self.retval=retval
+        
 def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), is_classmethod=False):
     '''
     functioncache is called and the decorator should be returned.
@@ -295,7 +309,12 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
                 if not fail_silently:
                     raise
             
-            retval = function(*args, **kwargs)
+            try:
+                retval = function(*args, **kwargs)
+            except SkipCache,e: # Log the error, return the value, don't cache it.
+                error_str = _traceback.format_exc()
+                _log_error(error_str)
+                return e.retval
 
             # store in cache
             try:

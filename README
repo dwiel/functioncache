@@ -34,6 +34,26 @@ In that case, you should use the is_classmethod=True keyword:
         def query(...):
            ...
 
+THE SkipCache EXCEPTION:
+
+Sometimes something goes wrong (e.g. communication with a server times out), and your function wants to return a
+"fail gracefully" fallback value, but you don't want it cached. The SkipCache exception lets you do just that.
+instead of doing:
+  return some_fallback_value
+you do:
+  raise SkipCache,"Server timeout",some_fallback_value
+The caller of your function will get the value, but it won't get cached.
+The error text ("Server timeout") will appear in functioncache's log.
+
+Example:
+
+        try:
+            user['avatar'] = self.twister.dhtget(username,'avatar','s')[0]['p']['v'] # yes. it's a "real life" example :)
+        except: # Probably a temporary network glitch. Better not cache
+            user['avatar'] = None # Client will show the default avatar
+            raise SkipCache("couldn't get avatar for @{0}, not caching".format(username),user)
+        return user
+
 NOTE: All arguments of the decorated function and the return value need to be
     picklable for this to work.
 

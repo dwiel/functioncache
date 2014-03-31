@@ -171,6 +171,22 @@ class TestFunctioncache(unittest.TestCase):
         hp = HashServer('pepper') # you SHOULDN'T do this "in real life"
         self.assertEqual(hs1.get_hash('puppy'),hp.get_hash('puppy')) # we expect a wrong answer here :)
 
+    def test_skipcache(self):
+        broken = True # simulate server down
+        
+        @functioncache.functioncache(42)
+        def shaky_query(q):
+            if broken:
+                raise functioncache.SkipCache(
+                    'Server is broken. Returning fallback result for "{0}"'.format(q), # Error message for log
+                    'Error in query "{0}"'.format(q)) # return value for the caller
+            # Server is up. Return the result we got
+            return 'Result for query "{0}" is 42'.format(q)
+
+        self.assertEqual(shaky_query('What time is love?'),'Error in query "What time is love?"')
+        broken = False # Server is back up. Now we can get the real answer. Let's hope we didn't cache the error
+        self.assertEqual(shaky_query('What time is love?'),'Result for query "What time is love?" is 42')
+
 class NotInnerClass:
     def __init__(self):
         self.number = 1

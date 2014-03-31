@@ -18,6 +18,22 @@ USAGE:
     def another_function(args):
         # etc
 
+USAGE FOR *INSTANCE AGNOSTIC* CLASS METHODS:
+
+Normally, you wouldn't want to cache class method results, because
+they may be affected by changes to the state of the object (self).
+
+*If you know what you're doing* and are sure that a class method
+would not be affected by the object's state (for example - object
+is a proxy to a remote service), you'll need to make sure the first
+argument (self) doesn't get cached.
+
+In that case, you should use the ignore_instance=True keyword:
+
+    class db:
+        @functioncache(functioncache.HOUR,ignore_instance=True)
+        def query(...):
+           ...
 
 NOTE: All arguments of the decorated function and the return value need to be
     picklable for this to work.
@@ -27,12 +43,8 @@ NOTE: The cache isn't automatically cleaned, it is only overwritten. If your
     cache may forever grow. One day I might add a feature that once in every
     100 calls scans the db for outdated stuff and erases.
 
-NOTE: This is less useful on methods of a class because the instance (self)
-    is cached, and if the instance isn't the same, the cache isn't used. This
-    makes sense because class methods are affected by changes in whatever
-    is attached to self.
-
 Tested on python 2.7 and 3.1
+(ignore_instance tested on python 2.7 and it rocks)
 
 License: BSD, do what you wish with this. Could be awesome to hear if you found
 it useful and/or you have suggestions. ubershmekel at gmail
@@ -256,9 +268,8 @@ class S3Backend(object) :
 
     def __setitem__(self, key, value) :
         return self.s3pool.set_contents_from_string(self.data_set, key, value)
-    
 
-def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend()):
+def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), ignore_instance=False):
     '''
     functioncache is called and the decorator should be returned.
     '''
@@ -270,7 +281,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
         @_functools.wraps(function)
         def function_with_cache(*args, **kwargs):
             try:
-                key = _args_key(function, args, kwargs)
+                key = _args_key(function, ignore_instance and args[1:] or args, kwargs)
 
                 if key in function._db:
                     rv = function._db[key]

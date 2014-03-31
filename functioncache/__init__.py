@@ -28,10 +28,10 @@ would not be affected by the object's state (for example - object
 is a proxy to a remote service), you'll need to make sure the first
 argument (self) doesn't get cached.
 
-In that case, you should use the is_classmethod=True keyword:
+In that case, you should use the ignore_instance=True keyword:
 
     class db:
-        @functioncache(functioncache.HOUR,is_classmethod=True)
+        @functioncache(functioncache.HOUR,ignore_instance=True)
         def query(...):
            ...
 
@@ -44,7 +44,7 @@ NOTE: The cache isn't automatically cleaned, it is only overwritten. If your
     100 calls scans the db for outdated stuff and erases.
 
 Tested on python 2.7 and 3.1
-(is_classmethod tested on python 2.7 and it rocks)
+(ignore_instance tested on python 2.7 and it rocks)
 
 License: BSD, do what you wish with this. Could be awesome to hear if you found
 it useful and/or you have suggestions. ubershmekel at gmail
@@ -284,7 +284,8 @@ class SkipCache(Exception):
         Exception.__init__(self, message)
         self.retval=retval
         
-def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), is_classmethod=False):
+
+def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), ignore_instance=False):
     '''
     functioncache is called and the decorator should be returned.
     '''
@@ -296,7 +297,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
         @_functools.wraps(function)
         def function_with_cache(*args, **kwargs):
             try:
-                key = _args_key(function, is_classmethod and args[1:] or args, kwargs)
+                key = _args_key(function, ignore_instance and args[1:] or args, kwargs)
 
                 if key in function._db:
                     rv = function._db[key]

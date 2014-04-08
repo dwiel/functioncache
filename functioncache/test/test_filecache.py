@@ -43,7 +43,7 @@ class TestFunctioncache(unittest.TestCase):
     #@classmethod                
     #def tearDownClass(self):
     #    erase_all_cache_files()
-    
+
     def test_returns(self):
         # make sure the thing works
         @functioncache.functioncache(30)
@@ -152,6 +152,40 @@ class TestFunctioncache(unittest.TestCase):
         
         second = instance.donothing(1)
         self.assertEqual(first, second)
+
+    def test_ignore_instance(self):
+        class HashServer:
+            def __init__(self,salt):
+                self.salt = salt
+            @functioncache.functioncache(23,ignore_instance=True)
+            def get_hash(self,s):
+                import hmac
+                h = hmac.new(self.salt)
+                for i in range(23*23): # make the cache worthwile :)
+                    h.update(s)
+                return h.hexdigest()
+
+        hs1 = HashServer('salt')
+        hs2 = HashServer('salt')
+        self.assertEqual(hs1.get_hash('puppy'),hs2.get_hash('puppy'))
+        hp = HashServer('pepper') # you SHOULDN'T do this "in real life"
+        self.assertEqual(hs1.get_hash('puppy'),hp.get_hash('puppy')) # we expect a wrong answer here :)
+
+    def test_skipcache(self):
+        broken = True # simulate server down
+        
+        @functioncache.functioncache(42)
+        def shaky_query(q):
+            if broken:
+                raise functioncache.SkipCache(
+                    'Server is broken. Returning fallback result for "{0}"'.format(q), # Error message for log
+                    'Error in query "{0}"'.format(q)) # return value for the caller
+            # Server is up. Return the result we got
+            return 'Result for query "{0}" is 42'.format(q)
+
+        self.assertEqual(shaky_query('What time is love?'),'Error in query "What time is love?"')
+        broken = False # Server is back up. Now we can get the real answer. Let's hope we didn't cache the error
+        self.assertEqual(shaky_query('What time is love?'),'Result for query "What time is love?" is 42')
 
 class NotInnerClass:
     def __init__(self):

@@ -130,7 +130,12 @@ def _log_error(error_str):
     except Exception:
         pass
 
-def _args_key(function, args, kwargs):
+
+def function_name(fn):
+    return fn.__name__
+
+
+def _args_key(function, args, kwargs, function_key=function_name):
     arguments = (args, kwargs)
     # Check if you have a valid, cached answer, and return it.
     # Sadly this is python version dependant
@@ -143,7 +148,7 @@ def _args_key(function, args, kwargs):
         #       function.__name__ is str but dumps returns bytes.
         arguments_pickle = _pickle.dumps(arguments, protocol=0).decode('ascii')
         
-    key = function.__name__ + arguments_pickle
+    key = function_key(function + arguments_pickle
     return key
 
 class ShelveBackend(object) :
@@ -285,9 +290,11 @@ class SkipCache(Exception):
         self.retval=retval
         
 
-def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), ignore_instance=False):
+def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), ignore_instance=False, function_key=function_name):
     '''
     functioncache is called and the decorator should be returned.
+
+    function_key allows you to introduce cache invalidation on implementation changes
     '''
     # if a class is passed in, create an instance of that class as the backend
     if isinstance(backend, _types.ClassType) or isinstance(backend, type) :
@@ -297,7 +304,10 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
         @_functools.wraps(function)
         def function_with_cache(*args, **kwargs):
             try:
-                key = _args_key(function, ignore_instance and args[1:] or args, kwargs)
+                key = _args_key(
+                    function, ignore_instance and args[1:] or args, kwargs,
+                    function_key=function_key
+                )
 
                 if key in function._db:
                     rv = function._db[key]

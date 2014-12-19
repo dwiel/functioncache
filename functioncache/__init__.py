@@ -148,7 +148,7 @@ def _args_key(function, args, kwargs, function_key=function_name):
         #       function.__name__ is str but dumps returns bytes.
         arguments_pickle = _pickle.dumps(arguments, protocol=0).decode('ascii')
         
-    key = function_key(function + arguments_pickle
+    key = function_key(function) + arguments_pickle
     return key
 
 class ShelveBackend(object) :

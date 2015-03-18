@@ -214,7 +214,7 @@ class FileBackend(object):
         try:
             file = open(self._get_filename(key), 'w')
             portalocker.Lock(file)
-            _pickle.dump(value, file)
+            _pickle.dump(value, file, _pickle.HIGHEST_PROTOCOL)
         except portalocker.LockException, e:
             # someone else had the lock, thats ok, we don't have to
             # write the value if someone else already is

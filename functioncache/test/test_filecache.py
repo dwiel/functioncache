@@ -157,6 +157,7 @@ class TestFunctioncache(unittest.TestCase):
         class HashServer:
             def __init__(self,salt):
                 self.salt = salt
+
             @functioncache.functioncache(23,ignore_instance=True)
             def get_hash(self,s):
                 import hmac
@@ -170,6 +171,34 @@ class TestFunctioncache(unittest.TestCase):
         self.assertEqual(hs1.get_hash('puppy'),hs2.get_hash('puppy'))
         hp = HashServer('pepper') # you SHOULDN'T do this "in real life"
         self.assertEqual(hs1.get_hash('puppy'),hp.get_hash('puppy')) # we expect a wrong answer here :)
+
+    def test_instance(self):
+        class HashServer:
+            def __init__(self,ret):
+                self.ret = ret
+
+            @functioncache.functioncache(23,ignore_instance=False)
+            def get_ret(self):
+                return self.ret
+
+        hs1 = HashServer(1)
+        hs2 = HashServer(2)
+        self.assertEqual(hs1.get_ret(), 1)
+        self.assertEqual(hs2.get_ret(), 2)
+
+    def test_ignore_instance_no_args(self):
+        class HashServer:
+            def __init__(self,ret):
+                self.ret = ret
+
+            @functioncache.functioncache(23,ignore_instance=True)
+            def get_ret(self):
+                return self.ret
+
+        hs1 = HashServer(1)
+        hs2 = HashServer(2)
+        self.assertEqual(hs1.get_ret(), 1)
+        self.assertEqual(hs2.get_ret(), 1)
 
     def test_skipcache(self):
         broken = True # simulate server down

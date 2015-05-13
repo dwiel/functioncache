@@ -328,7 +328,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
         def function_with_cache(*args, **kwargs):
             try:
                 key = _args_key(
-                    function, ignore_instance and args[1:] or args, kwargs,
+                    function, args[1:] if ignore_instance else args, kwargs,
                     function_key=function_key
                 )
 

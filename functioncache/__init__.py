@@ -279,10 +279,7 @@ class S3Backend(object):
     def setup(self, function):
         self.data_set = _get_cache_name(function)
 
-    def __init__(self, s3pool=None):
-        if not s3pool:
-            s3pool = create_s3pool()
-
+    def __init__(self, s3pool):
         self.s3pool = s3pool
 
     def __contains__(self, key):

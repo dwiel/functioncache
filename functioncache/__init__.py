@@ -9,11 +9,11 @@ the return values should be cached (use seconds, like time.sleep).
 USAGE:
 
     from functioncache import functioncache
-    
+
     @functioncache(24 * 60 * 60)
     def time_consuming_function(args):
         # etc
-    
+
     @functioncache(functioncache.YEAR)
     def another_function(args):
         # etc
@@ -55,7 +55,7 @@ A trick to invalidate a single value:
     @functioncache.functioncache
     def somefunc(x, y, z):
         return x * y * z
-        
+
     del somefunc._db[functioncache._args_key(somefunc, (1,2,3), {})]
     # or just iterate of somefunc._db (it's a shelve, like a dict) to find the right key.
 
@@ -135,6 +135,10 @@ def _log_error(error_str):
         pass
 
 
+class PicklingError(TypeError):
+    pass
+
+
 def function_name(fn):
     return fn.__name__
 
@@ -143,14 +147,17 @@ def _args_key(function, args, kwargs, function_key=function_name):
     arguments = (args, kwargs)
     # Check if you have a valid, cached answer, and return it.
     # Sadly this is python version dependant
-    if _sys.version_info[0] == 2:
-        arguments_pickle = _pickle.dumps(arguments)
-    else:
-        # NOTE: protocol=0 so it's ascii, this is crucial for py3k
-        #       because shelve only works with proper strings.
-        #       Otherwise, we'd get an exception because
-        #       function.__name__ is str but dumps returns bytes.
-        arguments_pickle = _pickle.dumps(arguments, protocol=0).decode('ascii')
+    try:
+        if _sys.version_info[0] == 2:
+            arguments_pickle = _pickle.dumps(arguments)
+        else:
+            # NOTE: protocol=0 so it's ascii, this is crucial for py3k
+            #       because shelve only works with proper strings.
+            #       Otherwise, we'd get an exception because
+            #       function.__name__ is str but dumps returns bytes.
+            arguments_pickle = _pickle.dumps(arguments, protocol=0).decode('ascii')
+    except TypeError as e:
+        raise PicklingError(str(e))
 
     key = function_key(function) + arguments_pickle
     return key
@@ -214,12 +221,15 @@ class FileBackend(object):
         try:
             file = open(self._get_filename(key), 'w')
             portalocker.Lock(file)
-            _pickle.dump(value, file, _pickle.HIGHEST_PROTOCOL)
+            try:
+                _pickle.dump(value, file, _pickle.HIGHEST_PROTOCOL)
+            except TypeError as e:
+                raise PicklingError(str(e))
         except portalocker.LockException, e:
             # someone else had the lock, thats ok, we don't have to
             # write the value if someone else already is
             pass
-        except Exception, e:
+        except Exception as e:
             # delete the file in the event of an exception during saving
             # to protect from corrupted files causing problems later
             try:
@@ -227,7 +237,7 @@ class FileBackend(object):
             except OSError:
                 pass
 
-            raise e
+            raise
 
     def _get_filename(self, key):
         # hash the key and use as a filename

@@ -425,8 +425,6 @@ def memcachecache(seconds_of_validity=None, fail_silently=False, mc=None):
     )
 
 if _os.path.exists(_os.path.expanduser("~/.disable_functioncache")):
-    print 'disabled functioncache'
-
     def functioncache(*_, **__):
         def nop_decorator(function):
             return function

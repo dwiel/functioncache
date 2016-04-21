@@ -1,5 +1,5 @@
 
-
+import inspect
 import unittest
 import imp
 import time
@@ -36,11 +36,11 @@ erase_all_cache_files()
 
 class TestFunctioncache(unittest.TestCase):
 
-    #@classmethod               
+    #@classmethod
     #def setUpClass(self):
     #    erase_all_cache_files()
-    
-    #@classmethod                
+
+    #@classmethod
     #def tearDownClass(self):
     #    erase_all_cache_files()
 
@@ -53,7 +53,7 @@ class TestFunctioncache(unittest.TestCase):
         params = [1, 'a', 'asdfa', set([1,2,3])]
         for item in params:
             self.assertEqual(donothing(item), item)
-        
+
     def test_speeds(self):
         DELAY = 0.5
         @functioncache.functioncache(60)
@@ -74,7 +74,7 @@ class TestFunctioncache(unittest.TestCase):
     def test_invalidates(self):
         wait = 0.1
         items = [1337, 69]
-        
+
         @functioncache.functioncache(wait)
         def popper():
             return items.pop()
@@ -83,7 +83,7 @@ class TestFunctioncache(unittest.TestCase):
         # I would wait just for 'wait' exactly but time.time() isn't accurate enough.
         time.sleep(wait * 1.1)
         second = popper()
-        
+
         self.assertNotEqual(first, second)
 
     def test_works_after_reload(self):
@@ -94,13 +94,13 @@ class TestFunctioncache(unittest.TestCase):
         imp.reload(stub_for_test)
         second = stub_for_test.the_time()
         self.assertEqual(first, second)
-    
+
     def test_interpreter_usage(self):
         '''
         This test is good for exec or interpreter usage of functioncache.
-        
+
         inspect.getfile(function) returned a bad filename for these cases.
-        
+
         e.g. old exception:
         IOError: [Errno 22] Invalid argument: '<string>.cache.dat'
         '''
@@ -109,27 +109,27 @@ class TestFunctioncache(unittest.TestCase):
         first = d['function'](13)
         second = d['function'](13)
         self.assertEqual(first, second)
-    
+
     def test_error_handling(self):
-        
+
         temp = functioncache._log_error
         try:
             passed_test = [False]
             def mock_logger(*args, **kwargs):
                 passed_test[0] = True
-            
+
             functioncache._log_error = mock_logger
-            
+
             def popper():
                 return 'arbitrary obj here'
-            
+
             # put anything in _db that you know will break functioncache
             popper._db = 123
-            
+
             popper = functioncache.functioncache(0.1, fail_silently=True)(popper)
-            
+
             first = popper()
-            
+
             self.assertTrue(passed_test[0])
         finally:
             functioncache._log_error = temp
@@ -141,15 +141,15 @@ class TestFunctioncache(unittest.TestCase):
         class A:
             def __init__(self):
                 self.number = 1
-            
+
             @functioncache.functioncache(5.0)
             def donothing(self, x):
                 self.number += x
                 return self.number
-        
+
         instance = NotInnerClass()
         first = instance.donothing(1)
-        
+
         second = instance.donothing(1)
         self.assertEqual(first, second)
 
@@ -202,7 +202,7 @@ class TestFunctioncache(unittest.TestCase):
 
     def test_skipcache(self):
         broken = True # simulate server down
-        
+
         @functioncache.functioncache(42)
         def shaky_query(q):
             if broken:
@@ -216,10 +216,19 @@ class TestFunctioncache(unittest.TestCase):
         broken = False # Server is back up. Now we can get the real answer. Let's hope we didn't cache the error
         self.assertEqual(shaky_query('What time is love?'),'Result for query "What time is love?" is 42')
 
+    def test_inspect(self):
+        @functioncache.dictcache
+        def foo(x, y, z=None):
+            return x, y, z
+
+        spec = inspect.getargspec(foo)
+        assert spec.args == ['x', 'y', 'z']
+        assert spec.defaults == (None,)
+
 class NotInnerClass:
     def __init__(self):
         self.number = 1
-    
+
     @functioncache.functioncache(5.0, backend = functioncache.FileBackend())
     def donothing(self, x):
         self.number += x

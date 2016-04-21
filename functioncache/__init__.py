@@ -63,9 +63,9 @@ A trick to invalidate a single value:
 """
 
 
+from decorator import decorate
 import collections as _collections
 import datetime as _datetime
-import functools as _functools
 import inspect as _inspect
 import os as _os
 import cPickle as _pickle
@@ -320,6 +320,47 @@ class SkipCache(Exception):
         self.retval = retval
 
 
+def function_with_cache(function, *args, **kwargs):
+    try:
+        key = _args_key(
+            function, args[1:] if function._ignore_instance else args, kwargs,
+            function_key=function._function_key
+        )
+
+        if key in function._db:
+            rv = function._db[key]
+            if function._seconds_of_validity is None or _time.time() - rv.timesig < function._seconds_of_validity:
+                return rv.data
+    except:
+        # in any case of failure, don't let functioncache break the
+        # program
+        error_str = _traceback.format_exc()
+        _log_error(error_str)
+        if not function._fail_silently:
+            raise
+
+    try:
+        retval = function(*args, **kwargs)
+    # Log the error, return the value, don't cache it.
+    except SkipCache, e:
+        error_str = _traceback.format_exc()
+        _log_error(error_str)
+        return e.retval
+
+    # store in cache
+    try:
+        function._db[key] = _retval(_time.time(), retval)
+    except:
+        # in any case of failure, don't let functioncache break the
+        # program
+        error_str = _traceback.format_exc()
+        _log_error(error_str)
+        if not function._fail_silently:
+            raise
+
+    return retval
+
+
 def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), ignore_instance=False, function_key=function_name):
     '''
     functioncache is called and the decorator should be returned.
@@ -331,47 +372,6 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
         backend = backend()
 
     def functioncache_decorator(function):
-        @_functools.wraps(function)
-        def function_with_cache(*args, **kwargs):
-            try:
-                key = _args_key(
-                    function, args[1:] if ignore_instance else args, kwargs,
-                    function_key=function_key
-                )
-
-                if key in function._db:
-                    rv = function._db[key]
-                    if seconds_of_validity is None or _time.time() - rv.timesig < seconds_of_validity:
-                        return rv.data
-            except:
-                # in any case of failure, don't let functioncache break the
-                # program
-                error_str = _traceback.format_exc()
-                _log_error(error_str)
-                if not fail_silently:
-                    raise
-
-            try:
-                retval = function(*args, **kwargs)
-            # Log the error, return the value, don't cache it.
-            except SkipCache, e:
-                error_str = _traceback.format_exc()
-                _log_error(error_str)
-                return e.retval
-
-            # store in cache
-            try:
-                function._db[key] = _retval(_time.time(), retval)
-            except:
-                # in any case of failure, don't let functioncache break the
-                # program
-                error_str = _traceback.format_exc()
-                _log_error(error_str)
-                if not fail_silently:
-                    raise
-
-            return retval
-
         # make sure cache is loaded
         if not hasattr(function, '_db'):
             cache_name = (_get_cache_name(function), type(backend))
@@ -384,7 +384,12 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
 
             function_with_cache._db = function._db
 
-        return function_with_cache
+        function._seconds_of_validity = seconds_of_validity
+        function._fail_silently = fail_silently
+        function._ignore_instance = ignore_instance
+        function._function_key = function_key
+
+        return decorate(function, function_with_cache)
 
     if type(seconds_of_validity) == _types.FunctionType:
         # support for when people use '@functioncache.functioncache' instead of

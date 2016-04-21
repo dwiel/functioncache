@@ -1,4 +1,5 @@
 from time import sleep
+import inspect
 
 import unittest
 
@@ -42,6 +43,9 @@ class FunctioncacheTest(unittest.TestCase) :
         # total number of backend types used in this file
         import functioncache
         assert len(functioncache.OPEN_DBS) == 2
+
+    def test_inspect(self):
+        assert inspect.getargspec(cached_file) == []
 
 if __name__ == '__main__' :
     unittest.main()

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dwiel/functioncache.svg?branch=master)](https://travis-ci.org/dwiel/functioncache)
+
 # functioncache
 
 functioncache is a decorator which saves the return value of functions even

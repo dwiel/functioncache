@@ -174,9 +174,9 @@ class TestFunctioncache(unittest.TestCase):
             @functioncache.functioncache(23, ignore_instance=True)
             def get_hash(self, s):
                 import hmac
-                h = hmac.new(self.salt)
+                h = hmac.new(self.salt.encode())
                 for i in range(23 * 23):  # make the cache worthwile :)
-                    h.update(s)
+                    h.update(s.encode())
                 return h.hexdigest()
 
         hs1 = HashServer('salt')

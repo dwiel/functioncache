@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import inspect
 import unittest
@@ -11,7 +12,7 @@ import tempfile
 
 _CACHE_ROOT = "/tmp/.functioncache"
 
-print "Using temporary _CACHE_ROOT = ", _CACHE_ROOT
+print("Using temporary _CACHE_ROOT = ", _CACHE_ROOT)
 functioncache._CACHE_ROOT = _CACHE_ROOT
 
 

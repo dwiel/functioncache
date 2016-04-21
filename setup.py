@@ -4,9 +4,6 @@ except ImportError:
     from distutils.core import setup
 
 
-import functioncache
-DOCUMENTATION = functioncache.__doc__
-
 VERSION = '0.94'
 
 SETUP_DICT = dict(
@@ -19,7 +16,6 @@ SETUP_DICT = dict(
     author_email='zdwiel@gmail.com',
     url='https://github.com/dwiel/functioncache',
     description='Persistent caching decorator',
-    long_description=DOCUMENTATION,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

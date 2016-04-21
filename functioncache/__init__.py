@@ -155,7 +155,8 @@ def _args_key(function, args, kwargs, function_key=function_name):
             #       because shelve only works with proper strings.
             #       Otherwise, we'd get an exception because
             #       function.__name__ is str but dumps returns bytes.
-            arguments_pickle = _pickle.dumps(arguments, protocol=0).decode('ascii')
+            arguments_pickle = _pickle.dumps(
+                arguments, protocol=0).decode('ascii')
     except TypeError as e:
         raise PicklingError(str(e))
 
@@ -225,7 +226,7 @@ class FileBackend(object):
                 _pickle.dump(value, file, _pickle.HIGHEST_PROTOCOL)
             except TypeError as e:
                 raise PicklingError(str(e))
-        except portalocker.LockException, e:
+        except portalocker.LockException as e:
             # someone else had the lock, thats ok, we don't have to
             # write the value if someone else already is
             pass
@@ -329,7 +330,8 @@ def function_with_cache(function, *args, **kwargs):
 
         if key in function._db:
             rv = function._db[key]
-            if function._seconds_of_validity is None or _time.time() - rv.timesig < function._seconds_of_validity:
+            if function._seconds_of_validity is None or _time.time(
+            ) - rv.timesig < function._seconds_of_validity:
                 return rv.data
     except:
         # in any case of failure, don't let functioncache break the
@@ -342,7 +344,7 @@ def function_with_cache(function, *args, **kwargs):
     try:
         retval = function(*args, **kwargs)
     # Log the error, return the value, don't cache it.
-    except SkipCache, e:
+    except SkipCache as e:
         error_str = _traceback.format_exc()
         _log_error(error_str)
         return e.retval
@@ -361,7 +363,12 @@ def function_with_cache(function, *args, **kwargs):
     return retval
 
 
-def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBackend(), ignore_instance=False, function_key=function_name):
+def functioncache(
+        seconds_of_validity=None,
+        fail_silently=True,
+        backend=ShelveBackend(),
+        ignore_instance=False,
+        function_key=function_name):
     '''
     functioncache is called and the decorator should be returned.
 
@@ -391,7 +398,7 @@ def functioncache(seconds_of_validity=None, fail_silently=True, backend=ShelveBa
 
         return decorate(function, function_with_cache)
 
-    if type(seconds_of_validity) == _types.FunctionType:
+    if isinstance(seconds_of_validity, _types.FunctionType):
         # support for when people use '@functioncache.functioncache' instead of
         # '@functioncache.functioncache()'
         func = seconds_of_validity

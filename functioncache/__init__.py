@@ -366,6 +366,17 @@ def function_with_cache(function, *args, **kwargs):
     return retval
 
 
+def is_class(x):
+    """ handle difference between py2 and py3 """
+    if isinstance(x, type):
+        return True
+
+    if hasattr(_types, 'ClassType'):
+        return isinstance(x, _types.ClassType)
+    else:
+        return False
+
+
 def functioncache(
         seconds_of_validity=None,
         fail_silently=True,
@@ -378,7 +389,7 @@ def functioncache(
     function_key allows you to introduce cache invalidation on implementation changes
     '''
     # if a class is passed in, create an instance of that class as the backend
-    if isinstance(backend, _types.ClassType) or isinstance(backend, type):
+    if is_class(backend):
         backend = backend()
 
     def functioncache_decorator(function):

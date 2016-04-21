@@ -68,7 +68,10 @@ import collections as _collections
 import datetime as _datetime
 import inspect as _inspect
 import os as _os
-import cPickle as _pickle
+try:
+    import cPickle as _pickle
+except ImportError:
+    import pickle as _pickle
 import shelve as _shelve
 import sys as _sys
 import time as _time

@@ -3,15 +3,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-import os.path
-import sys
-
-CMD_CLASS = None
-try:
-    from googlecode_distutils_upload import upload
-    CMD_CLASS = {'google_upload': upload}
-except Exception:
-    pass
 
 import functioncache
 DOCUMENTATION = functioncache.__doc__
@@ -40,11 +31,5 @@ SETUP_DICT = dict(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ]
   )
-
-if CMD_CLASS:
-    SETUP_DICT['cmdclass'] = CMD_CLASS
-
-# generate .rst file with documentation
-#open(os.path.join(os.path.dirname(__file__), 'documentation.rst'), 'w').write(DOCUMENTATION)
 
 setup(**SETUP_DICT)

@@ -3,5 +3,7 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
+install:
+  - pip install -e .
 # command to run tests
 script: py.test .

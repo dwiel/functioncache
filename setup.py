@@ -4,7 +4,7 @@ except ImportError:
     from distutils.core import setup
 
 
-VERSION = '0.97'
+VERSION = '0.98'
 
 SETUP_DICT = dict(
     name='functioncache',

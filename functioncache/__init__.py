@@ -213,7 +213,7 @@ class FileBackend(object):
         return _os.path.isfile(self._get_filename(key))
 
     def __getitem__(self, key):
-        return _pickle.load(open(self._get_filename(key)))
+        return _pickle.load(open(self._get_filename(key), 'rb'))
 
     def __setitem__(self, key, value):
         # first-write wins semantics.  if someone else already cached this
@@ -223,7 +223,7 @@ class FileBackend(object):
         import portalocker
 
         try:
-            file = open(self._get_filename(key), 'w')
+            file = open(self._get_filename(key), 'wb')
             portalocker.Lock(file)
             try:
                 _pickle.dump(value, file, _pickle.HIGHEST_PROTOCOL)
@@ -245,7 +245,7 @@ class FileBackend(object):
 
     def _get_filename(self, key):
         # hash the key and use as a filename
-        return self.dir_name + '/' + hashlib.sha512(key).hexdigest()
+        return self.dir_name + '/' + hashlib.sha512(key.encode()).hexdigest()
 
 
 class DictBackend(dict):

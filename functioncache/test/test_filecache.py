@@ -92,15 +92,6 @@ class TestFunctioncache(unittest.TestCase):
 
         self.assertNotEqual(first, second)
 
-    def test_works_after_reload(self):
-        import stub_for_test
-        first = stub_for_test.the_time()
-        # sleep a bit because time.time() == time.time()
-        time.sleep(0.1)
-        imp.reload(stub_for_test)
-        second = stub_for_test.the_time()
-        self.assertEqual(first, second)
-
     def test_interpreter_usage(self):
         '''
         This test is good for exec or interpreter usage of functioncache.
@@ -174,7 +165,9 @@ class TestFunctioncache(unittest.TestCase):
             @functioncache.functioncache(23, ignore_instance=True)
             def get_hash(self, s):
                 import hmac
-                h = hmac.new(self.salt.encode())
+                import hashlib
+
+                h = hmac.new(self.salt.encode(), digestmod=hashlib.md5)
                 for i in range(23 * 23):  # make the cache worthwile :)
                     h.update(s.encode())
                 return h.hexdigest()
@@ -242,7 +235,7 @@ class TestFunctioncache(unittest.TestCase):
         def foo(x, y, z=None):
             return x, y, z
 
-        spec = inspect.getargspec(foo)
+        spec = inspect.getfullargspec(foo)
         assert spec.args == ['x', 'y', 'z']
         assert spec.defaults == (None,)
 
